@@ -39,7 +39,7 @@ jobs:
       uses: mikefarah/yq@master
       with:
         cmd: |
-          APP_NAME_PLACEHOLDER="$GITHUB_ENV" yq '
+          APP_NAME_PLACEHOLDER="${{ env.branch_name }}" yq '
             .patches[0].patch |= envsubst |
             .namePrefix |= envsubst |
             .labels[0].pairs.app |= envsubst |
