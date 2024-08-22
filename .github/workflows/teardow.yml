@@ -14,3 +14,21 @@ jobs:
     - name: Extract branch name
       id: extract_branch
       run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+    - name: Checkout Infra Manifests
+      uses: actions/checkout@v2
+      with:
+        repository: "marciok/pharrell-williams-manifests"
+        ref: main
+        token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
+    - name: Update Manifests
+      uses: mikefarah/yq@master
+      with:
+        cmd: |
+          rm -rf manifests/overlay/${{ env.branch_name }}
+          yq -i 'del(.resources[] | select(. == "overlay/${{ env.branch_name }}"))' manifests/kustomization.yml
+          yq -i 'del(.patches[] | select(.path == "overlay/blink-182/patch.yml"))' manifests/kustomization.yml
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Removed preview ${{ env.branch_name }}"
+        branch: main
