@@ -1,0 +1,16 @@
+name: Teradown Preview
+on:
+    pull_request:
+      branches: 
+        - main
+      types: [closed]
+
+jobs:
+  teardown-preview:
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Extract branch name
+      id: extract_branch
+      run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
