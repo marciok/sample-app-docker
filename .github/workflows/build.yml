@@ -57,7 +57,7 @@ jobs:
     - name: Commit and push changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "New preview ${{ env.branch_name }}"
+        commit_message: "New preview: ${{ env.branch_name }}"
         branch: main
     - name: Wait for preview to be ready
       run: |
