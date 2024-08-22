@@ -1,13 +1,12 @@
-name: Teradown Preview
+name: Teardown Preview
 on:
     pull_request:
       branches: 
-        - main
+        - master
       types: [closed]
 
 jobs:
   teardown-preview:
-    if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
 
     steps:
