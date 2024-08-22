@@ -26,11 +26,11 @@ jobs:
 
     - name: Extract branch name
       id: extract_branch
-      run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+      run: echo "deploy=${GITHUB_HEAD_REF}-${GITHUB_SHA}" >> $GITHUB_ENV
     - name: Build and Push Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.branch_name }} .
-        docker push ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.branch_name }}
+        docker build -t ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.deploy }} .
+        docker push ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.deploy }}
     - name: Checkout Infra Manifests
       uses: actions/checkout@v2
       with:
@@ -41,27 +41,27 @@ jobs:
       uses: mikefarah/yq@master
       with:
         cmd: |
-          mkdir manifests/overlay/${{ env.branch_name }}
-          APP_NAME_PLACEHOLDER="${{ env.branch_name }}" yq '
+          mkdir manifests/overlay/${{ env.deploy }}
+          APP_NAME_PLACEHOLDER="${{ env.deploy }}" yq '
             .patches[0].patch |= envsubst |
             .namePrefix |= envsubst |
             .labels[0].pairs.app |= envsubst |
             .images[0].newTag |= envsubst
-          ' templates/app-kustomization.yml > manifests/overlay/${{ env.branch_name }}/kustomization.yml
+          ' templates/app-kustomization.yml > manifests/overlay/${{ env.deploy }}/kustomization.yml
           yq '
-            .[0].value.host = "${{ env.branch_name }}.melhorbanco.digital" |
-            .[0].value.http.paths[0].backend.service.name = "${{ env.branch_name }}-service"
-          ' templates/patch.yml > manifests/overlay/${{ env.branch_name }}/patch.yml
-          yq -i '.resources += "overlay/${{ env.branch_name }}"' manifests/kustomization.yml
-          yq -i '.patches += { "path": "overlay/${{ env.branch_name }}/patch.yml", "target": { "kind": "Ingress", "name": "myapp-ingress" } }' manifests/kustomization.yml
+            .[0].value.host = "${{ env.deploy }}.melhorbanco.digital" |
+            .[0].value.http.paths[0].backend.service.name = "${{ env.deploy }}-service"
+          ' templates/patch.yml > manifests/overlay/${{ env.deploy }}/patch.yml
+          yq -i '.resources += "overlay/${{ env.deploy }}"' manifests/kustomization.yml
+          yq -i '.patches += { "path": "overlay/${{ env.deploy }}/patch.yml", "target": { "kind": "Ingress", "name": "myapp-ingress" } }' manifests/kustomization.yml
     - name: Commit and push changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "New preview: ${{ env.branch_name }}"
+        commit_message: "New preview: ${{ env.deploy }}"
         branch: main
     - name: Wait for preview to be ready
       run: |
-        url="http://${{ env.branch_name }}.melhorbanco.digital"
+        url="http://${{ env.deploy }}.melhorbanco.digital"
         max_attempts=60
         sleep 30
         attempt=1

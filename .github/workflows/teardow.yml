@@ -23,9 +23,9 @@ jobs:
       uses: mikefarah/yq@master
       with:
         cmd: |
-          rm -rf manifests/overlay/${{ env.branch_name }}
-          yq -i 'del(.resources[] | select(. == "overlay/${{ env.branch_name }}"))' manifests/kustomization.yml
-          yq -i 'del(.patches[] | select(.path == "overlay/${{ env.branch_name }}/patch.yml"))' manifests/kustomization.yml
+          find manifests/overlay -type d -name '${{ env.branch_name }}--*' -exec rm -r {} +
+          yq -i 'del(.resources[] | select(test("overlay/${{ env.branch_name }}--")))' manifests/kustomization.yml
+          yq -i 'del(.patches[] | select(.path | test("overlay/${{ env.branch_name }}--")))' manifests/kustomization.yml;
     - name: Commit and push changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
