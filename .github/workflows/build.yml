@@ -32,15 +32,6 @@ jobs:
     - name: Extract branch name
       id: extract_branch
       run: echo "deploy=${GITHUB_HEAD_REF}--${GITHUB_SHA}" >> $GITHUB_ENV
-    - uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: 'URL to preview: http://${{ env.deploy }}.melhorbanco.digital'
-          })   
     - name: Build and Push Docker image
       run: |
         docker build -t ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.deploy }} .
@@ -99,3 +90,12 @@ jobs:
         done
         echo "URL did not resolve or return 200 status code after $max_attempts attempts."
         exit 1
+    - uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'URL to preview: http://${{ env.deploy }}.melhorbanco.digital'
+          })   
