@@ -36,7 +36,7 @@ jobs:
         ref: main
         token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
     - name: Update Manifests
-      uses: mikefarah/yq
+      uses: mikefarah/yq@master
       with:
         cmd: |
           APP_NAME_PLACEHOLDER="$GITHUB_ENV" yq '
