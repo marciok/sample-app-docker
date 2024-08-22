@@ -65,15 +65,22 @@ jobs:
         max_attempts=20
         attempt=1
         while [ $attempt -le $max_attempts ]; do
-          status_code=$(curl -o /dev/null -s -w "%{http_code}" "$url")
-          if [ "$status_code" -eq 200 ]; then
-            echo "URL returned 200 status code."
-            exit 0
+          # Check if the host can be resolved
+          nslookup_status=$(nslookup $(echo "$url" | awk -F/ '{print $3}') > /dev/null 2>&1; echo $?)
+          if [ "$nslookup_status" -ne 0 ]; then
+            echo "Attempt $attempt: Could not resolve host. Retrying in 10 seconds..."
           else
-            echo "Attempt $attempt: URL returned $status_code status code. Retrying in 5 seconds..."
-            attempt=$((attempt+1))
-            sleep 10
+            # If the host is resolved, check the HTTP status code
+            status_code=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+            if [ "$status_code" -eq 200 ]; then
+              echo "URL returned 200 status code."
+              exit 0
+            else:
+              echo "Attempt $attempt: URL returned $status_code status code. Retrying in 10 seconds..."
+            fi
           fi
+          attempt=$((attempt+1))
+          sleep 10
         done
-        echo "URL did not return 200 status code after $max_attempts attempts."
+        echo "URL did not resolve or return 200 status code after $max_attempts attempts."
         exit 1
