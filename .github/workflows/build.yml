@@ -39,36 +39,19 @@ jobs:
       uses: mikefarah/yq@master
       with:
         cmd: |
+          mkdir manifests/overlay/${{ env.branch_name }}
           APP_NAME_PLACEHOLDER="${{ env.branch_name }}" yq '
             .patches[0].patch |= envsubst |
             .namePrefix |= envsubst |
             .labels[0].pairs.app |= envsubst |
             .images[0].newTag |= envsubst
-          ' templates/app-kustomization.yml        
-
-      # yq -i '.resources += "overlay/post-malone"' manifests/kustomization.yml
-
-      # yq -i '.[0].value.host = "post-malone.melhorbanco.digital"' templates/patch.yml
-      # yq -i '.[0].value.http.paths[0].backend.service.name = "post-malone-service"' templates/patch.yml
-
-      # yq -i '
-      #   .[0].value.host = "post-malone.melhorbanco.digital" |
-      #   .[0].value.http.paths[0].backend.service.name = "post-malone-service"
-      # ' templates/patch.yml
-
-      # APP_NAME_PLACEHOLDER="post-malone" yq '.patches[0].patch |= envsubst' templates/app-kustomization.yml
-      # APP_NAME_PLACEHOLDER="post-malone" yq '.namePrefix |= envsubst' templates/app-kustomization.yml
-      # APP_NAME_PLACEHOLDER="post-malone" yq '.labels[0].pairs.app |= envsubst' templates/app-kustomization.yml
-      # APP_NAME_PLACEHOLDER="post-malone" yq '.images[0].newTag |= envsubst' templates/app-kustomization.yml
-
-
-      # APP_NAME_PLACEHOLDER="post-malone" yq '
-      #   .patches[0].patch |= envsubst |
-      #   .namePrefix |= envsubst |
-      #   .labels[0].pairs.app |= envsubst |
-      #   .images[0].newTag |= envsubst
-      # ' templates/app-kustomization.yml
-
-
-      #  TODO: Read patches with path
-
+          ' templates/app-kustomization.yml > manifests/overlay/${{ env.branch_name }}/app-kustomization.yml
+          yq '
+            .[0].value.host = "${{ env.branch_name }}.melhorbanco.digital" |
+            .[0].value.http.paths[0].backend.service.name = "${{ env.branch_name }}-service"
+          ' templates/patch.yml > manifests/overlay/${{ env.branch_name }}/patch.yml
+          yq -i '.resources += "overlay/${{ env.branch_name }}"' manifests/kustomization.yml
+          yq -i '.patches += { "path": "overlay/${{ env.branch_name }}/patch.yml", "target": { "kind": "Ingress", "name": "myapp-ingress" } }' manifests/kustomization.yml
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "New preview ${{ env.branch_name }}"
