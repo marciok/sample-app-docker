@@ -45,7 +45,7 @@ jobs:
             .namePrefix |= envsubst |
             .labels[0].pairs.app |= envsubst |
             .images[0].newTag |= envsubst
-          ' templates/app-kustomization.yml > manifests/overlay/${{ env.branch_name }}/app-kustomization.yml
+          ' templates/app-kustomization.yml > manifests/overlay/${{ env.branch_name }}/kustomization.yml
           yq '
             .[0].value.host = "${{ env.branch_name }}.melhorbanco.digital" |
             .[0].value.http.paths[0].backend.service.name = "${{ env.branch_name }}-service"
