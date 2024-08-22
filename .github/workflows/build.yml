@@ -25,8 +25,50 @@ jobs:
     - name: Extract branch name
       id: extract_branch
       run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
-
     - name: Build and Push Docker image
       run: |
         docker build -t ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.branch_name }} .
         docker push ghcr.io/${{ github.repository_owner }}/sample-app-docker:${{ env.branch_name }}
+    - name: Checkout Infra Manifests
+      uses: actions/checkout@v2
+      with:
+        repository: "marciok/pharrell-williams-manifests"
+        ref: main
+        token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
+    - name: Update Manifests
+      uses: mikefarah/yq
+      with:
+        cmd: |
+          APP_NAME_PLACEHOLDER="$GITHUB_ENV" yq '
+            .patches[0].patch |= envsubst |
+            .namePrefix |= envsubst |
+            .labels[0].pairs.app |= envsubst |
+            .images[0].newTag |= envsubst
+          ' templates/app-kustomization.yml        
+
+      # yq -i '.resources += "overlay/post-malone"' manifests/kustomization.yml
+
+      # yq -i '.[0].value.host = "post-malone.melhorbanco.digital"' templates/patch.yml
+      # yq -i '.[0].value.http.paths[0].backend.service.name = "post-malone-service"' templates/patch.yml
+
+      # yq -i '
+      #   .[0].value.host = "post-malone.melhorbanco.digital" |
+      #   .[0].value.http.paths[0].backend.service.name = "post-malone-service"
+      # ' templates/patch.yml
+
+      # APP_NAME_PLACEHOLDER="post-malone" yq '.patches[0].patch |= envsubst' templates/app-kustomization.yml
+      # APP_NAME_PLACEHOLDER="post-malone" yq '.namePrefix |= envsubst' templates/app-kustomization.yml
+      # APP_NAME_PLACEHOLDER="post-malone" yq '.labels[0].pairs.app |= envsubst' templates/app-kustomization.yml
+      # APP_NAME_PLACEHOLDER="post-malone" yq '.images[0].newTag |= envsubst' templates/app-kustomization.yml
+
+
+      # APP_NAME_PLACEHOLDER="post-malone" yq '
+      #   .patches[0].patch |= envsubst |
+      #   .namePrefix |= envsubst |
+      #   .labels[0].pairs.app |= envsubst |
+      #   .images[0].newTag |= envsubst
+      # ' templates/app-kustomization.yml
+
+
+      #  TODO: Read patches with path
+
