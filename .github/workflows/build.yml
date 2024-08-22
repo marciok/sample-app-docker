@@ -52,6 +52,8 @@ jobs:
           ' templates/patch.yml > manifests/overlay/${{ env.branch_name }}/patch.yml
           yq -i '.resources += "overlay/${{ env.branch_name }}"' manifests/kustomization.yml
           yq -i '.patches += { "path": "overlay/${{ env.branch_name }}/patch.yml", "target": { "kind": "Ingress", "name": "myapp-ingress" } }' manifests/kustomization.yml
-    - uses: stefanzweifel/git-auto-commit-action@v4
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "New preview ${{ env.branch_name }}"
+        branch: main
