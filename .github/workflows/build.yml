@@ -59,3 +59,21 @@ jobs:
       with:
         commit_message: "New preview ${{ env.branch_name }}"
         branch: main
+    - name: Wait for preview to be ready
+      run: |
+        url="${{ env.branch_name }}.melhorbanco.digital"
+        max_attempts=20
+        attempt=1
+        while [ $attempt -le $max_attempts ]; do
+          status_code=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+          if [ "$status_code" -eq 200 ]; then
+            echo "URL returned 200 status code."
+            exit 0
+          else
+            echo "Attempt $attempt: URL returned $status_code status code. Retrying in 5 seconds..."
+            attempt=$((attempt+1))
+            sleep 10
+          fi
+        done
+        echo "URL did not return 200 status code after $max_attempts attempts."
+        exit 1
