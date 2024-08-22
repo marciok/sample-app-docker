@@ -61,7 +61,7 @@ jobs:
         branch: main
     - name: Wait for preview to be ready
       run: |
-        url="${{ env.branch_name }}.melhorbanco.digital"
+        url="http://${{ env.branch_name }}.melhorbanco.digital"
         max_attempts=20
         attempt=1
         while [ $attempt -le $max_attempts ]; do
